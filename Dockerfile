@@ -1,4 +1,4 @@
-FROM debian:latest
+FROM debian:wheezy
 MAINTAINER avinash.s@yukthi.com
 
 RUN apt-get update
