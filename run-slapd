@@ -1,0 +1,22 @@
+#!/bin/sh
+
+if [ -d /var/lib/ldap/DB_CONFIG ]; then
+    exit 0
+fi
+
+cp /schema/* /etc/ldap/schema
+
+echo "slapd slapd/no_configuration boolean  true" | debconf-set-selections
+echo "slapd slapd/internal/adminpw password ${LDAP_PASS}" | debconf-set-selections
+echo "slapd slapd/password1 password ${LDAP_PASS}" | debconf-set-selections
+echo "slapd slapd/password2 password ${LDAP_PASS}" | debconf-set-selections
+echo "slapd slapd/domain string ${TODOMAIN}" | debconf-set-selections
+echo "slapd shared/organization string ${ORGANIZATION}" | debconf-set-selections
+
+dpkg-reconfigure --priority="critical" slapd
+apt-get clean
+
+sed -i s/by\ \\*\ break$/by\ peername.regex=IP=172\\\\.17\\\\.\.\+\ dn=cn=admin,${BASE_DN}\ manage\ by\ \*\ break/ /etc/ldap/slapd.d/cn=config/olcDatabase={0}config.ldif
+
+echo "Starting slapd..."
+ulimit -n 1024 && /usr/sbin/slapd -h "ldap:/// ldapi:///" -g openldap -u openldap -F /etc/ldap/slapd.d -d 0
