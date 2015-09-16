@@ -1,4 +1,4 @@
-FROM debian:wheezy
+FROM debian:jessie
 MAINTAINER avinash.s@yukthi.com
 
 RUN apt-get update
