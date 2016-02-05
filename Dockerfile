@@ -12,6 +12,11 @@ RUN apt-get -y install python-smbpasswd
 RUN apt-get -y install python-psycopg2
 RUN apt-get -y install python-cracklib
 RUN apt-get -y install python-flask
+
+# Add our custom slapd.init.ldif template with additional schema, ACL,
+# overlays and other configuration.
+ADD slapd.init.ldif /usr/share/slapd/
+
 RUN mkdir /var/lib/totaloffice
 
 RUN mkdir /var/run/slapd

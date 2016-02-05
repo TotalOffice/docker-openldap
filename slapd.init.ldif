@@ -1,0 +1,183 @@
+# Global config:
+dn: cn=config
+objectClass: olcGlobal
+cn: config
+# Where the pid file is put. The init.d script
+# will not stop the server if you change this.
+olcPidFile: /var/run/slapd/slapd.pid
+# List of arguments that were passed to the server
+olcArgsFile: /var/run/slapd/slapd.args
+# Read slapd.conf(5) for possible values
+olcLogLevel: none
+# The tool-threads parameter sets the actual amount of cpu's that is used
+# for indexing.
+olcToolThreads: 1
+
+# Frontend settings
+dn: olcDatabase={-1}frontend,cn=config
+objectClass: olcDatabaseConfig
+objectClass: olcFrontendConfig
+olcDatabase: {-1}frontend
+# The maximum number of entries that is returned for a search operation
+olcSizeLimit: 500
+# Allow unlimited access to local connection from the local root user
+olcAccess: {0}to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break
+# Allow unauthenticated read access for schema and base DN autodiscovery
+olcAccess: {1}to dn.exact="" by * read
+olcAccess: {2}to dn.base="cn=Subschema" by * read
+
+# Config db settings
+dn: olcDatabase=config,cn=config
+objectClass: olcDatabaseConfig
+olcDatabase: config
+# Allow unlimited access to local connection from the local root user
+olcAccess: to * by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage by * break
+olcRootDN: cn=admin,cn=config
+
+# Load schemas
+dn: cn=schema,cn=config
+objectClass: olcSchemaConfig
+cn: schema
+
+include: file:///etc/ldap/schema/core.ldif
+include: file:///etc/ldap/schema/cosine.ldif
+include: file:///etc/ldap/schema/nis.ldif
+include: file:///etc/ldap/schema/inetorgperson.ldif
+include: file:///etc/ldap/schema/dyngroup.ldif
+include: file:///etc/ldap/schema/ppolicy.ldif
+include: file:///etc/ldap/schema/samba.ldif
+include: file:///etc/ldap/schema/totaloffice.ldif
+
+# Load module
+dn: cn=module{0},cn=config
+objectClass: olcModuleList
+cn: module{0}
+olcModulePath: /usr/lib/ldap
+olcModuleLoad: back_@BACKEND@
+olcModuleLoad: dynlist
+olcModuleLoad: unique
+olcModuleLoad: ppolicy
+olcModuleLoad: smbk5pwd
+
+# Set defaults for the backend
+dn: olcBackend=@BACKEND@,cn=config
+objectClass: olcBackendConfig
+olcBackend: @BACKEND@
+
+# The database definition.
+dn: olcDatabase=@BACKEND@,cn=config
+objectClass: olcDatabaseConfig
+objectClass: @BACKENDOBJECTCLASS@
+olcDatabase: @BACKEND@
+olcDbCheckpoint: 512 30
+@BACKENDOPTIONS@
+olcLastMod: TRUE
+olcLimits: users size=unlimited
+olcSuffix: @SUFFIX@
+olcDbDirectory: /var/lib/ldap
+olcRootDN: cn=admin,@SUFFIX@
+olcRootPW: @PASSWORD@
+olcDbIndex: objectClass eq
+olcDbIndex: toAllowDestination,toDenyDestination eq
+olcDbIndex: toAllowSource,toDenySource eq
+olcDbIndex: associatedDomain sub,eq
+olcDbIndex: toDefaultDomain, eq
+olcDbIndex: toAccessPolicy,ipHostNumber eq
+olcDbIndex: ou,cn,sn,uid sub,eq
+olcDbIndex: mail,mailForwardingAddress,mailAlternateAddress eq
+olcDbIndex: member,memberUid,uidNumber,gidNumber,service eq
+olcDbIndex: sambaSID,sambaPrimaryGroupSID,sambaDomainName eq
+olcAccess: to attrs=userPassword,shadowLastChange,sambaLMPassword,sambaNTPassword,sambaPwdLastSet
+    by self write
+    by anonymous auth
+    by dn="cn=admin,@SUFFIX@" write
+    by dn="uid=toadmin,ou=People,@SUFFIX@" write
+    by * none
+olcAccess: to dn.base=""
+    by * read
+olcAccess: to dn.base="ou=Group,@SUFFIX@"
+    by group.exact="cn=read,ou=Groups,ou=ACL,ou=TotalOffice,@SUFFIX@" =rscdx
+    by group.exact="cn=add,ou=Groups,ou=ACL,ou=TotalOffice,@SUFFIX@" =arscdx
+    by group.exact="cn=delete,ou=Groups,ou=ACL,ou=TotalOffice,@SUFFIX@" =zwarscdx
+    by dn="cn=admin,@SUFFIX@" write
+    by dn="uid=toadmin,ou=People,@SUFFIX@" write
+    by * read
+olcAccess: to dn.children="ou=Group,@SUFFIX@" filter=(objectClass=totalOfficeGroup)
+    by group.exact="cn=read,ou=Groups,ou=ACL,ou=TotalOffice,@SUFFIX@" =rscdx
+    by group.exact="cn=add,ou=Groups,ou=ACL,ou=TotalOffice,@SUFFIX@" =wrscdx
+    by group.exact="cn=delete,ou=Groups,ou=ACL,ou=TotalOffice,@SUFFIX@" =wrscdx
+    by dn="cn=admin,@SUFFIX@" write
+    by dn="uid=toadmin,ou=People,@SUFFIX@" write
+    by * read
+olcAccess: to dn.base="ou=People,@SUFFIX@"
+    by group.exact="cn=read,ou=Users,ou=ACL,ou=TotalOffice,@SUFFIX@" =rscdx
+    by group.exact="cn=add,ou=Users,ou=ACL,ou=TotalOffice,@SUFFIX@" =arscdx
+    by group.exact="cn=delete,ou=Users,ou=ACL,ou=TotalOffice,@SUFFIX@" =zwarscdx
+    by dn="cn=admin,@SUFFIX@" write
+    by dn="uid=toadmin,ou=People,@SUFFIX@" write
+    by * read
+olcAccess: to dn.children="ou=People,@SUFFIX@" filter=(objectClass=totalOfficeAccount)
+    by group.exact="cn=read,ou=Users,ou=ACL,ou=TotalOffice,@SUFFIX@" =rscdx
+    by group.exact="cn=add,ou=Users,ou=ACL,ou=TotalOffice,@SUFFIX@" =wrscdx
+    by group.exact="cn=delete,ou=Users,ou=ACL,ou=TotalOffice,@SUFFIX@" =wrscdx
+    by dn="cn=admin,@SUFFIX@" write
+    by dn="uid=toadmin,ou=People,@SUFFIX@" write
+    by * read
+olcAccess: to *
+    by self write
+    by dn="cn=admin,@SUFFIX@" write
+    by dn="uid=toadmin,ou=People,@SUFFIX@" write
+    by * read
+
+# {0}dynlist, {1}mdb, config
+dn: olcOverlay=dynlist,olcDatabase={1}mdb,cn=config
+objectClass: olcOverlayConfig
+objectClass: olcDynamicList
+olcOverlay: dynlist
+olcDlAttrSet: groupOfURLs memberURL
+
+# {1}dynlist, {1}mdb, config
+dn: olcOverlay=dynlist,olcDatabase={1}mdb,cn=config
+objectClass: olcOverlayConfig
+objectClass: olcDynamicList
+olcOverlay: dynlist
+olcDlAttrSet: totalOfficeGroup memberURL memberUid:uid maildrop:mail
+
+# {2}dynlist, {1}mdb, config
+dn: olcOverlay=dynlist,olcDatabase={1}mdb,cn=config
+objectClass: olcOverlayConfig
+objectClass: olcDynamicList
+olcOverlay: dynlist
+olcDlAttrSet: totalOfficeInternetAccess memberURL memberUid:uid ipHostNumber:ipHostNumber
+
+# {3}dynlist, {1}mdb, config
+dn: olcOverlay=dynlist,olcDatabase={1}mdb,cn=config
+objectClass: olcOverlayConfig
+objectClass: olcDynamicList
+olcOverlay: dynlist
+olcDlAttrSet: totalOfficePolicy memberURL memberUid:uid
+
+# {0}unique, {1}mdb, config
+dn: olcOverlay={0}unique,olcDatabase={1}mdb,cn=config
+objectClass: olcUniqueConfig
+olcOverlay: {0}unique
+olcUniqueURI: ldap:///?uid,uidNumber?sub?(objectClass=posixAccount)
+olcUniqueURI: ldap:///ou=Group,@SUFFIX@?cn,gidNumber?sub?(objectClass=posixGroup)
+olcUniqueURI: ldap:///?mail?sub
+
+# {0}ppolicy, {1}mdb, config
+dn: olcOverlay={0}ppolicy,olcDatabase={1}mdb,cn=config
+objectClass: olcOverlayConfig
+objectClass: olcPPolicyConfig
+olcOverlay: {0}ppolicy
+olcPPolicyDefault: cn=default,ou=policy
+olcPPolicyHashCleartext: FALSE
+olcPPolicyUseLockout: FALSE
+olcPPolicyForwardUpdates: FALSE
+
+# {1}smbk5pwd, {1}mdb, config
+dn: olcOverlay={1}smbk5pwd,olcDatabase={1}mdb,cn=config
+objectClass: olcOverlayConfig
+objectClass: olcSmbK5PwdConfig
+olcOverlay: {1}smbk5pwd
+olcSmbK5PwdEnable: samba

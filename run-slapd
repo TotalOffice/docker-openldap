@@ -4,7 +4,8 @@ if [ -d /var/lib/ldap/DB_CONFIG ]; then
     exit 0
 fi
 
-cp /schema/* /etc/ldap/schema
+echo "Copying additional schema"
+cp -v /schema/* /etc/ldap/schema
 
 echo "slapd slapd/no_configuration boolean  true" | debconf-set-selections
 echo "slapd slapd/internal/adminpw password ${LDAP_PASS}" | debconf-set-selections
