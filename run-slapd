@@ -17,4 +17,4 @@ if [ ! -f /var/lib/ldap/data.mdb ]; then
 fi
 
 echo "Starting slapd..."
-ulimit -n 1024 && /usr/sbin/slapd -h "ldap:/// ldapi:///" -g openldap -u openldap -F /etc/ldap/slapd.d -d 0
+ulimit -n 1024 && /usr/sbin/slapd -h "ldap:/// ldapi:///" -g openldap -u openldap -F /etc/ldap/slapd.d -d stats
