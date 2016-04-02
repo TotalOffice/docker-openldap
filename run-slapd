@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Initialise the LDAP database if it doesn't exists.
+#
 # Assuming we are running Debian Jessie, it uses OpenLDAP's MDB
 if [ ! -f /var/lib/ldap/data.mdb ]; then
    echo "Copying additional schema"
@@ -17,4 +19,6 @@ if [ ! -f /var/lib/ldap/data.mdb ]; then
 fi
 
 echo "Starting slapd..."
+# We use ulimit to ensure slapd doesn't runaway with memory.
+# https://github.com/docker/docker/issues/4717
 ulimit -n 1024 && /usr/sbin/slapd -h "ldap:/// ldapi:///" -g openldap -u openldap -F /etc/ldap/slapd.d -d stats
