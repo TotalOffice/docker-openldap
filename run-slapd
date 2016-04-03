@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash -e
 
 # Initialise the LDAP database if it doesn't exists.
 #
@@ -16,7 +16,16 @@ if [ ! -f /var/lib/ldap/data.mdb ]; then
    echo "slapd shared/organization string ${ORGANIZATION}" | debconf-set-selections
    # Run reconfigure to set the new values
    dpkg-reconfigure --priority="critical" slapd
+
+   # Star the database and initialise with TotalOffice entries.
+   pushd /totaloffice/toconfigure
+   echo "Creating default entries"
+   ulimit -n 1024 && /usr/sbin/slapd -h "ldap:/// ldapi:///" -g openldap -u openldap -F /etc/ldap/slapd.d
+   ./configure.d/20-slapd;
+   killall slapd
+   popd
 fi
+
 
 echo "Starting slapd..."
 # We use ulimit to ensure slapd doesn't runaway with memory.
