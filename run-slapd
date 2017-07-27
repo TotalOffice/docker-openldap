@@ -30,4 +30,4 @@ fi
 echo "Starting slapd..."
 # We use ulimit to ensure slapd doesn't runaway with memory.
 # https://github.com/docker/docker/issues/4717
-ulimit -n 1024 && /usr/sbin/slapd -h "ldap:/// ldapi:///" -g openldap -u openldap -F /etc/ldap/slapd.d -d stats
+ulimit -n 1024 && /usr/sbin/slapd -h "ldap:/// ldapi:///" -g openldap -u openldap -F /etc/ldap/slapd.d -d 0
